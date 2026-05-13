@@ -1,0 +1,86 @@
+=====================================================
+
+Admin Login
+{
+  "username": "v3ddkj8etx",
+  "password": "65o7EPEltTkqUjR"
+}
+
+=====================================================
+
+User Login
+{
+  "username": "r4h6uy0llk",
+  "password": "fUVd5ssayqxFWhA"
+}
+
+=====================================================
+
+Add new module from dhivise 
+
+- Model - milk.js
+
+- controller - admin - milkController.js
+- controller - device - v1 - milkController.js
+
+- routes - admin -  milkRoutes.js
+- routes - admin -  index.js
+- routes - device - v1 - milkRoutes.js
+- routes - device - v1 - index.js
+
+- utils - validation - milkValidation.js
+
+- seeders - index.js
+
+- postman - postman-collection-v2.1.0
+
+================================================================
+
+Tag Fix : 
+
+NA tag cow give a 'tag-1' to 'tag-10'
+
+================================================================
+
+Dob Fix :
+
+Some cow have no dob or some has issue in dob 
+
+we assinged date '2021-01-01'
+
+================================================================
+
+send died date fix : 
+
+some cow hase not assinged or it's record not foud from gaushala side 
+
+so we assinged date '1001-01-01'
+
+================================================================
+
+Stock Fix : 
+
+while entering data of Stock 
+
+we assinged RFO_no : 9999 
+
+================================================================
+
+Stipend Fix : 
+
+While adding data we don't know which vendor assign to Stipend so we assinged vendor id as '00'
+
+================================================================
+
+Production Fix : 
+
+while adding data for Production we created new department = 'DATA SETTELMENT'
+and item added against in 'NA'
+
+================================================================
+in stock entry if user select on date : toDate = 1900-01-01
+================================================================
+bill_date fix : 
+
+When stock out bill_date fixed because it only use for stock in 
+bill_date = '1001-01-01'
