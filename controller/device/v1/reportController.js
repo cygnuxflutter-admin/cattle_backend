@@ -1159,7 +1159,7 @@ const salesReportAllDepartmentsMonthly = async (req, res) => {
             department_name: "$departmentsData.value",
             // rate: '$rate',
           },
-          qty: { $sum: '$qty' },
+          // qty: { $sum: '$qty' },
           total: { $sum: "$total" },
         },
       },

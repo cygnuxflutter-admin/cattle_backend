@@ -12,6 +12,7 @@ router.route('/device/api/v1/employee/create').post(auth(PLATFORM.DEVICE), check
 router.route('/device/api/v1/employee/addBulk').post(auth(PLATFORM.DEVICE), checkRolePermission, employeeController.bulkInsertEmployee);
 router.route('/device/api/v1/employee/list').post(auth(PLATFORM.DEVICE), checkRolePermission, employeeController.findAllEmployee);
 router.route('/device/api/v1/employee/count').post(auth(PLATFORM.DEVICE), checkRolePermission, employeeController.getEmployeeCount);
+router.route('/device/api/v1/employee/getEmployeeListByGaushalaId').get(auth(PLATFORM.DEVICE), checkRolePermission, employeeController.getEmployeeListByGaushalaId);
 router.route('/device/api/v1/employee/:id').get(auth(PLATFORM.DEVICE), checkRolePermission, employeeController.getEmployee);
 router.route('/device/api/v1/employee/update/:id').post(auth(PLATFORM.DEVICE), checkRolePermission, employeeController.updateEmployee);
 router.route('/device/api/v1/employee/updateEmployeeSalary').post(auth(PLATFORM.DEVICE), checkRolePermission, employeeController.updateEmployeeSalary);

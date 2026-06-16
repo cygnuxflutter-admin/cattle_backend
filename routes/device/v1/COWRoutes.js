@@ -18,8 +18,8 @@ router.route('/device/api/v1/cow/updateDamSair').post(COWController.updateDamSai
 router.route('/device/api/v1/cow/manualCowAdd').post(COWController.manualCowAdd);
 router.route('/device/api/v1/cow/getCowFamily').post(auth(PLATFORM.DEVICE), checkRolePermission, COWController.getCowFamily);
 router.route('/device/api/v1/cow/getCowsMilkInfo').post(auth(PLATFORM.DEVICE), checkRolePermission, COWController.getCowsMilkInfo);
+router.route('/device/api/v1/cow/getChildrenDetails').post(auth(PLATFORM.DEVICE), checkRolePermission, COWController.getChildrenDetails);
 router.route('/device/api/v1/cow/getSairFamily').post(auth(PLATFORM.DEVICE), checkRolePermission, COWController.getSairFamily);
-router.route('/device/api/v1/cow/getLastCowId').get(auth(PLATFORM.DEVICE), checkRolePermission, COWController.getCowLsatID);
 
 
 //upload.array('images', 5)  this means this allow 5 images only
@@ -32,6 +32,7 @@ router.route('/device/api/v1/cow/create').post(auth(PLATFORM.DEVICE), checkRoleP
 router.route('/device/api/v1/cow/addBulk').post(auth(PLATFORM.DEVICE), checkRolePermission, COWController.bulkInsertCOW);
 router.route('/device/api/v1/cow/list').post(auth(PLATFORM.DEVICE), checkRolePermission, COWController.findAllCOW);
 // router.route('/device/api/v1/cow/Update').get(auth(PLATFORM.DEVICE), checkRolePermission, COWController.bulkUpdateCOW);
+router.route('/device/api/v1/cow/getLastCowId').get(auth(PLATFORM.DEVICE), checkRolePermission, COWController.getCowLsatID);
 router.route('/device/api/v1/cow/count').post(auth(PLATFORM.DEVICE), checkRolePermission, COWController.getCOWCount);
 router.route('/device/api/v1/cow/getCow').post(auth(PLATFORM.DEVICE), checkRolePermission, COWController.getCOW);
 router.route('/device/api/v1/cow/update/:id').post(auth(PLATFORM.DEVICE), checkRolePermission, COWController.updateCOW);

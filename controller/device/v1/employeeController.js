@@ -537,6 +537,21 @@ const getMonthlyAttendance = async (req, res) => {
 }
 
 
+const getEmployeeListByGaushalaId = async (req, res) => {
+  try {
+    const gaushala_id = req.user.gaushala_id;
+
+    const employees = await Employee.find(
+      { gaushala_id: gaushala_id, isActive: true },
+      { emp_id: 1, payroll_name: 1, _id: 0 }
+    );
+
+    return res.success({ data: employees });
+  } catch (error) {
+    return res.internalServerError({ message: error.message });
+  }
+};
+
 module.exports = {
   updateEmpDod,
   updateEmployeeSalary,
@@ -548,5 +563,6 @@ module.exports = {
   updateEmployee,
   partialUpdateEmployee,
   updateEmpID,
-  getMonthlyAttendance
+  getMonthlyAttendance,
+  getEmployeeListByGaushalaId
 };

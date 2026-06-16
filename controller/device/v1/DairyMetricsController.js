@@ -484,7 +484,6 @@ const updateHistory = async (req, res) => {
 const getReminders = async (req, res) => {
   try {
     let resultArray = [];
-    console.log("getReminders called for gaushala_id:", req.user.gaushala_id);
 
     // Get the pending medications
     const pendingMedications = await medicineController.getMedicineList(req.user.gaushala_id);

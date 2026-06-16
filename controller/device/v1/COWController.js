@@ -160,6 +160,31 @@ const addCOW = async (req, res) => {
   }
 };
 
+const getCowLsatID = async (req, res) => {
+  try {
+
+    const gaushala_id = req.query.gaushala_id;
+
+    if (!gaushala_id) {
+      return res.badRequest({ message: "gaushala_id is required" });
+    }
+
+    const lastCow = await COW
+      .findOne({ gaushala_id: gaushala_id })
+      .sort({ _id: -1 });
+
+    if (!lastCow) {
+      return res.recordNotFound({ message: "No cow found" });
+    }
+
+    return res.success({ data: lastCow.tag_id });
+
+  } catch (error) {
+    return res.internalServerError({ message: error.message });
+  }
+};
+
+
 /**
  * @description : create multiple documents of COW in mongodb collection.
  * @param {Object} req : request including body for creating documents.
@@ -168,7 +193,7 @@ const addCOW = async (req, res) => {
  */
 
 // const bulkUpdateCOW = async (req, res) => {
- 
+
 //   try {
 //     const result = await COW.updateMany(
 //       { gaushala_id: "01" },        // filter
@@ -337,7 +362,7 @@ const getCOW = async (req, res) => {
     let foundCOW = '';
     const gaushala_id = req.user.gaushala_id
 
-    foundCOW = await dbService.findOne(COW, { tag_id: parseToInt(req.body.tag_id), gaushala_id: gaushala_id }, options);
+    foundCOW = await dbService.findOne(COW, { tag_id: (req.body.tag_id), gaushala_id: gaushala_id }, options);
 
     if (foundCOW === null) {
       foundCOW = await dbService.findOne(COW, { tag_id: req.body.tag_id, gaushala_id: gaushala_id }, options);
@@ -815,6 +840,19 @@ async function printFamilyHierarchy(parentId, relationship, depth, gaushala_id) 
   return family;
 }
 
+
+function getMatchingTagIds(cowsData) {
+  const matchingTagIds = [];
+
+  cowsData.forEach((cow) => {
+    if (cow.tag_id === cow.dam_id || cow.tag_id === cow.sair_id) {
+      matchingTagIds.push(cow.tag_id);
+    }
+  });
+
+  return matchingTagIds;
+}
+
 const getCowFamily = async (req, res) => {
   try {
     const tag_id = req.body.tag_id;
@@ -851,17 +889,36 @@ function filterNullValues(obj) {
   );
 }
 
-function getMatchingTagIds(cowsData) {
-  const matchingTagIds = [];
 
-  cowsData.forEach((cow) => {
-    if (cow.tag_id === cow.dam_id || cow.tag_id === cow.sair_id) {
-      matchingTagIds.push(cow.tag_id);
+// New API to get children details where given a cow ID, it returns family info of its children (matching dam_id or sire_id)
+const getChildrenDetails = async (req, res) => {
+  try {
+    const tag_id = req.body.tag_id;
+    const gaushala_id = req.user.gaushala_id;
+
+    // Find children where dam_id or sire_id matches the given tag_id
+    const children = await COW.find({
+      $or: [{ dam_id: tag_id }, { sire_id: tag_id }],
+      gaushala_id,
+    });
+
+    if (!children || children.length === 0) {
+      return res.recordNotFound({ message: "No children found for the given cow ID" });
     }
-  });
 
-  return matchingTagIds;
-}
+    // For each child, fetch its full family hierarchy
+    const childrenDetails = await Promise.all(
+      children.map((c) => getFamilyHierarchy(c.tag_id, gaushala_id))
+    );
+
+    // Filter out null values from hierarchy results
+    const filteredChildren = childrenDetails.map(filterNullValues);
+
+    return res.success({ data: filteredChildren });
+  } catch (error) {
+    return res.internalServerError({ message: error.message });
+  }
+};
 
 const getCowsMilkInfo = async (req, res) => {
   try {
@@ -1142,29 +1199,6 @@ const updateDamSair = async (req, res) => {
     return res.internalServerError({ message: error.message });
   }
 };
-const getCowLsatID = async (req, res) => {
-  try {
- 
-    const gaushala_id = req.query.gaushala_id;
- 
-    if (!gaushala_id) {
-      return res.badRequest({ message: "gaushala_id is required" });
-    }
- 
-    const lastCow = await COW
-      .findOne({ gaushala_id: gaushala_id })
-      .sort({ _id: -1 });
- 
-    if (!lastCow) {
-      return res.recordNotFound({ message: "No cow found" });
-    }
- 
-    return res.success({ data: lastCow.tag_id });
- 
-  } catch (error) {
-    return res.internalServerError({ message: error.message });
-  }
-};
 
 const updateMilkAsPerNewTag02 = async (req, res) => {
   try {
@@ -1231,12 +1265,14 @@ module.exports = {
   updateCowDod,
   getCowsMilkInfo,
   getCowFamily,
+  getChildrenDetails,
   updateSendDiedCows,
   uploadCowImage,
   checkTagIds,
   removeDuplicate,
   cowTransfer,
   addCOW,
+  getCowLsatID,
   bulkInsertCOW,
   findAllCOW,
   getCOW,
@@ -1249,6 +1285,5 @@ module.exports = {
   getSairFamily,
   deleteManyCOW,
   softDeleteManyCOW,
-  updateMilkAsPerNewTag02,
-  getCowLsatID
+  updateMilkAsPerNewTag02
 };
