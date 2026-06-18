@@ -542,7 +542,7 @@ const getEmployeeListByGaushalaId = async (req, res) => {
     const gaushala_id = req.user.gaushala_id;
 
     const employees = await Employee.find(
-      { gaushala_id: gaushala_id, isActive: true },
+      { gaushala_id: gaushala_id, isActive: true, category: "Milking" },
       { emp_id: 1, payroll_name: 1, _id: 0 }
     );
 
