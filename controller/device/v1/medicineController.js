@@ -97,7 +97,22 @@ const addMedicine = async (req, res) => {
 // bulk medicine 
 const bulkAddMedicine = async (req, res) => {
   try {
-    let dataArrayToCreate = req.body || [];
+    let originalDataArray = req.body || [];
+    let dataArrayToCreate = [];
+
+    // Flatten vaccines array if it exists
+    for (let data of originalDataArray) {
+      if (data.vaccines && Array.isArray(data.vaccines) && data.vaccines.length > 0) {
+        for (let vac of data.vaccines) {
+          let newData = { ...data, ...vac };
+          delete newData.vaccines;
+          dataArrayToCreate.push(newData);
+        }
+      } else {
+        dataArrayToCreate.push(data);
+      }
+    }
+
     let createdMedicines = [];
 
     for (let dataToCreate of dataArrayToCreate) {
