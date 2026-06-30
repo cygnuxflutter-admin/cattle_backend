@@ -33,6 +33,7 @@ router.use(require('./userRoutes'));
 router.use(require('./COWRoutes'));
 router.use(require('./uploadRoutes'));
 router.use(require('./emailRoutes'));
+router.use(require('./medical_reminderRoutes'));
 
 ///This is for generate hashed password for testing purpose only.
 router.post('/passView', async (req, res) => {
