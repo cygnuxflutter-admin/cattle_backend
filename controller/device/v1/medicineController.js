@@ -20,6 +20,8 @@ const COW = require('../../../model/COW');
  * @param {Object} res : response of created document
  * @return {Object} : created Medicine. {status, message, data}
  */
+
+
 const addMedicine = async (req, res) => {
   try {
     let dataToCreate = { ...req.body || {} };
