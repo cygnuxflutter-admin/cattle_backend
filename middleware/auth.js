@@ -40,6 +40,8 @@ const verifyCallback = (req, resolve, reject, platform) => async (error, user, i
 const auth = (platform) => async (req, res, next) => {
 
   if (platform == PLATFORM.DEVICE) {
+    console.log("Device Auth check for", req.method, req.originalUrl);
+    console.log("Headers received:", req.headers.authorization ? "Bearer present" : "No auth header!");
     return new Promise((resolve, reject) => {
       passport.authenticate('device-rule', { session: false }, verifyCallback(req, resolve, reject, platform))(
         req,
