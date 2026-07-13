@@ -294,14 +294,24 @@ const getTodayMilkHistory = async (req, res) => {
             date: '$date',
             shed_id: '$cow.shed_id',
           },
-          morning: {
+          morningMilk: {
             $sum: {
               $cond: [{ $eq: ["$day_time", "morning"] }, "$liter", 0]
             }
           },
-          evening: {
+          morningEmployee: {
+            $max: {
+              $cond: [{ $eq: ["$day_time", "morning"] }, "$remark", null]
+            }
+          },
+          eveningMilk: {
             $sum: {
               $cond: [{ $eq: ["$day_time", "evening"] }, "$liter", 0]
+            }
+          },
+          eveningEmployee: {
+            $max: {
+              $cond: [{ $eq: ["$day_time", "evening"] }, "$remark", null]
             }
           },
           total: { $sum: '$liter' },
@@ -313,8 +323,14 @@ const getTodayMilkHistory = async (req, res) => {
           cow_tag_id: '$_id.cow_tag_id',
           gaushala_id: 1,
           date: '$_id.date',
-          morning: 1,
-          evening: 1,
+          morning: {
+            milk: '$morningMilk',
+            employee_name: '$morningEmployee'
+          },
+          evening: {
+            milk: '$eveningMilk',
+            employee_name: '$eveningEmployee'
+          },
           shed_id: '$_id.shed_id',
           total: { $round: ['$total', 2] }  // Rounds the total to 2 decimal places
         }
