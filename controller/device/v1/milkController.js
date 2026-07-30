@@ -270,29 +270,10 @@ const getTodayMilkHistory = async (req, res) => {
         $match: query
       },
       {
-        $lookup: {
-          from: "cows",
-          localField: "cow_tag_id",
-          foreignField: "tag_id",
-          as: "cow",
-          pipeline: [
-            {
-              $match: {
-                gaushala_id: query.gaushala_id
-              }
-            }
-          ]
-        }
-      },
-      {
-        $unwind: "$cow"
-      },
-      {
         $group: {
           _id: {
             cow_tag_id: '$cow_tag_id',
             date: '$date',
-            shed_id: '$cow.shed_id',
           },
           morningMilk: {
             $sum: {
@@ -321,7 +302,6 @@ const getTodayMilkHistory = async (req, res) => {
         $project: {
           _id: 0,
           cow_tag_id: '$_id.cow_tag_id',
-          gaushala_id: 1,
           date: '$_id.date',
           morning: {
             milk: '$morningMilk',
@@ -331,8 +311,7 @@ const getTodayMilkHistory = async (req, res) => {
             milk: '$eveningMilk',
             employee_name: '$eveningEmployee'
           },
-          shed_id: '$_id.shed_id',
-          total: { $round: ['$total', 2] }  // Rounds the total to 2 decimal places
+          total: { $round: ['$total', 2] }
         }
       }, {
         $sort: {
@@ -341,81 +320,46 @@ const getTodayMilkHistory = async (req, res) => {
       }
     ];
 
+    const rawMilk = await Milk.aggregate(pipeline);
 
-    const milk = await Milk.aggregate(pipeline);
-
-    if (!milk || milk.length === 0) {
+    if (!rawMilk || rawMilk.length === 0) {
       return res.recordNotFound();
     }
 
-    // get summary data
-    const summaryPipeline = [
-      {
-        $match: query
-      },
-      {
-        $lookup: {
-          from: "cows",
-          localField: "cow_tag_id",
-          foreignField: "tag_id",
-          as: "cow",
-          pipeline: [
-            {
-              $match: {
-                gaushala_id: query.gaushala_id
-              }
-            }
-          ]
-        }
-      },
-      {
-        $unwind: "$cow"
-      },
-      {
-        $group: {
-          // _id: "$cow.breed",
-          // cow_tag_id: '$cow_tag_id',
-          // date: '$date',
-          _id: {
-            // cow_tag_id: '$cow_tag_id',
-            breed: "$cow.breed",
-            date: '$date',
+    const allCows = await COW.find({ gaushala_id: query.gaushala_id }).select('tag_id shed_id breed');
+    const cowMap = {};
+    allCows.forEach(c => cowMap[c.tag_id] = c);
 
-          },
-          // Count number of cows of each breed
-          uniqueCows: { $addToSet: "$cow_tag_id" }, // Collect unique cow_tag_id values
-          milk_count: { $sum: "$liter" }, // Sum the milk produced by each breed
-          morning: {
-            $sum: {
-              $cond: [{ $eq: ["$day_time", "morning"] }, "$liter", 0]
-            }
-          },
-          evening: {
-            $sum: {
-              $cond: [{ $eq: ["$day_time", "evening"] }, "$liter", 0]
-            }
-          },
-        }
-      },
-      {
-        $project: {
-          _id: 0,
-          breed: "$_id.breed",
-          cows_count: { $size: "$uniqueCows" },
-          milk_count: { $round: ['$milk_count', 2] },
-          tag_id: "$uniqueCows",
-          date: "$_id.date",
-          // morning: 1,
-          // evening: 1,
-        }
-      }, {
-        $sort: {
-          date: 1
-        }
+    const summaryMap = {};
+    const milk = [];
+
+    rawMilk.forEach(m => {
+      const cow = cowMap[m.cow_tag_id] || {};
+      const breed = cow.breed || 'Unknown';
+      m.shed_id = cow.shed_id || '';
+      m.gaushala_id = query.gaushala_id;
+      milk.push(m);
+
+      const key = breed + '_' + m.date;
+      if (!summaryMap[key]) {
+        summaryMap[key] = {
+          breed: breed,
+          date: m.date,
+          tag_id: new Set(),
+          milk_count: 0
+        };
       }
-    ];
+      summaryMap[key].tag_id.add(m.cow_tag_id);
+      summaryMap[key].milk_count += m.total;
+    });
 
-    const summary = await Milk.aggregate(summaryPipeline);
+    const summary = Object.values(summaryMap).map(s => ({
+      breed: s.breed,
+      date: s.date,
+      tag_id: Array.from(s.tag_id),
+      cows_count: s.tag_id.size,
+      milk_count: Math.round(s.milk_count * 100) / 100
+    })).sort((a, b) => a.date.localeCompare(b.date));
 
     if (!summary || summary.length === 0) {
       return res.recordNotFound();
@@ -434,7 +378,7 @@ function formatDate(dateObj) {
   const day = String(dateObj.getDate()).padStart(2, '0');
   const month = String(dateObj.getMonth() + 1).padStart(2, '0');
   const year = dateObj.getFullYear();
-  return `${day}/${month}/${year}`;
+  return `${year}-${month}-${day}`;
 }
 
 async function getPendingCowsDateWise(gaushala_id, fromDate, toDate) {
@@ -465,32 +409,21 @@ async function getPendingCowsDateWise(gaushala_id, fromDate, toDate) {
       current.setDate(current.getDate() + 1);
     }
 
+    // Fetch all milks for the entire date range at once
+    const allMilks = await Milk.find({
+      gaushala_id: gaushala_id,
+      date: { $in: dates },
+      isDeleted: false
+    }).select('cow_tag_id day_time date');
+
     const result = [];
-
-    // 3️⃣ Loop each date
     for (let date of dates) {
+      const dailyMilks = allMilks.filter(m => m.date === date);
+      const morningMilkTagIds = new Set(dailyMilks.filter(m => m.day_time === 'morning').map(m => m.cow_tag_id));
+      const eveningMilkTagIds = new Set(dailyMilks.filter(m => m.day_time === 'evening').map(m => m.cow_tag_id));
 
-      const milkEntries = await Milk.find({
-        gaushala_id: gaushala_id,
-        date: date,
-        isDeleted: false
-      }).select('cow_tag_id day_time');
-
-      const morningMilkTagIds = milkEntries
-        .filter(m => m.day_time === 'morning')
-        .map(m => m.cow_tag_id);
-
-      const eveningMilkTagIds = milkEntries
-        .filter(m => m.day_time === 'evening')
-        .map(m => m.cow_tag_id);
-
-      const pendingMorning = allCows.filter(
-        cow => !morningMilkTagIds.includes(cow.tagId)
-      );
-
-      const pendingEvening = allCows.filter(
-        cow => !eveningMilkTagIds.includes(cow.tagId)
-      );
+      const pendingMorning = allCows.filter(cow => !morningMilkTagIds.has(cow.tagId));
+      const pendingEvening = allCows.filter(cow => !eveningMilkTagIds.has(cow.tagId));
 
       result.push({
         date: date,
