@@ -26,6 +26,7 @@ const schema = new Schema({
   date: { type: String },
   day_time: { type: String },
   remark: { type: String },
+  emp_remarks: { type: String },
   isDeleted: { type: Boolean },
 });
 
