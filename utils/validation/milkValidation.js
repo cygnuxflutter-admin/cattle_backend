@@ -16,6 +16,7 @@ exports.schemaKeys = joi.object({
   date: joi.string().allow(null).allow(''),
   day_time: joi.string().allow(null).allow(''),
   remark: joi.string().allow(null).allow(''),
+  emp_remarks: joi.string().allow(null).allow(''),
   isDeleted: joi.boolean()
 }).unknown(true);
 
@@ -27,6 +28,7 @@ exports.updateSchemaKeys = joi.object({
   date: joi.string().allow(null).allow(''),
   day_time: joi.string().allow(null).allow(''),
   remark: joi.string().allow(null).allow(''),
+  emp_remarks: joi.string().allow(null).allow(''),
   isDeleted: joi.boolean(),
   _id: joi.string().regex(/^[0-9a-fA-F]{24}$/)
 }).unknown(true);
@@ -43,6 +45,7 @@ exports.findFilterKeys = joi.object({
       date: joi.alternatives().try(joi.array().items(),joi.string(),joi.object()),
       day_time: joi.alternatives().try(joi.array().items(),joi.string(),joi.object()),
       remark: joi.alternatives().try(joi.array().items(),joi.string(),joi.object()),
+      emp_remarks: joi.alternatives().try(joi.array().items(),joi.string(),joi.object()),
       isDeleted: joi.alternatives().try(joi.array().items(),joi.boolean(),joi.object()),
       id: joi.any(),
       _id: joi.alternatives().try(joi.array().items(),joi.string().regex(/^[0-9a-fA-F]{24}$/),joi.object())
