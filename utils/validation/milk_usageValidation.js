@@ -5,9 +5,10 @@ const {
 
 /** validation keys and properties of milk_usage */
 exports.schemaKeys = joi.object({
-  liter: joi.string().allow(null).allow(''),
-  used_in: joi.string().allow(null).allow(''),
+  liter: joi.string().required(),
+  used_in: joi.string().required(),
   distribution_person: joi.string().allow(null).allow(''),
+  day_time: joi.string().required(),
   description: joi.string().allow(null).allow(''),
   isDeleted: joi.boolean(),
   isActive: joi.boolean()
@@ -19,6 +20,7 @@ exports.updateSchemaKeys = joi.object({
   used_in: joi.string().allow(null).allow(''),
   distribution_person: joi.string().allow(null).allow(''),
   date: joi.string(),
+  day_time: joi.string().allow(null).allow(''),
   description: joi.string().allow(null).allow(''),
   isDeleted: joi.boolean(),
   isActive: joi.boolean(),
@@ -35,6 +37,7 @@ exports.findFilterKeys = joi.object({
       used_in: joi.alternatives().try(joi.array().items(), joi.string(), joi.object()),
       distribution_person: joi.alternatives().try(joi.array().items(), joi.string(), joi.object()),
       date: joi.alternatives().try(joi.array().items(), joi.string(), joi.object()),
+      day_time: joi.alternatives().try(joi.array().items(), joi.string(), joi.object()),
       description: joi.alternatives().try(joi.array().items(), joi.string(), joi.object()),
       isDeleted: joi.alternatives().try(joi.array().items(), joi.boolean(), joi.object()),
       isActive: joi.alternatives().try(joi.array().items(), joi.boolean(), joi.object()),
