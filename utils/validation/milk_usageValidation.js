@@ -7,6 +7,7 @@ const {
 exports.schemaKeys = joi.object({
   liter: joi.string().allow(null).allow(''),
   used_in: joi.string().allow(null).allow(''),
+  day_time: joi.string().allow(null).allow(''),
   distribution_person: joi.string().allow(null).allow(''),
   description: joi.string().allow(null).allow(''),
   isDeleted: joi.boolean(),
@@ -17,6 +18,7 @@ exports.schemaKeys = joi.object({
 exports.updateSchemaKeys = joi.object({
   liter: joi.string().allow(null).allow(''),
   used_in: joi.string().allow(null).allow(''),
+  day_time: joi.string().allow(null).allow(''),
   distribution_person: joi.string().allow(null).allow(''),
   date: joi.string(),
   description: joi.string().allow(null).allow(''),

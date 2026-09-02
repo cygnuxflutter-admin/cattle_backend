@@ -88,6 +88,16 @@ const todayTotalMilk = async (req, res) => {
         $group: {
           _id: null,
           totalLiter: { $sum: '$liter' },
+          morningMilk: {
+            $sum: {
+              $cond: [{ $eq: ["$day_time", "morning"] }, "$liter", 0]
+            }
+          },
+          eveningMilk: {
+            $sum: {
+              $cond: [{ $eq: ["$day_time", "evening"] }, "$liter", 0]
+            }
+          },
           uniqueCowTagIds: { $addToSet: '$cow_tag_id' },
         },
       },
@@ -108,12 +118,16 @@ const todayTotalMilk = async (req, res) => {
 
     let todaysMilk = 0;
     let milkingCows = 0;
+    let morningMilk = 0;
+    let eveningMilk = 0;
 
     if (todayMilkAgreegation.length === 0) {
       todaysMilk = 0;
       milkingCows = 0;
     } else {
       todaysMilk = todayMilkAgreegation[0].totalLiter;
+      morningMilk = todayMilkAgreegation[0].morningMilk;
+      eveningMilk = todayMilkAgreegation[0].eveningMilk;
       milkingCows = todayMilkAgreegation[0].countUniqueCowTagIds;
     }
 
@@ -139,6 +153,16 @@ const todayTotalMilk = async (req, res) => {
         $group: {
           _id: todayDate,
           totalLiter: { $sum: { $toDouble: '$liter' } },
+          morningMilkUsage: {
+            $sum: {
+              $cond: [{ $eq: ["$day_time", "morning"] }, { $toDouble: '$liter' }, 0]
+            }
+          },
+          eveningMilkUsage: {
+            $sum: {
+              $cond: [{ $eq: ["$day_time", "evening"] }, { $toDouble: '$liter' }, 0]
+            }
+          }
         },
       },
     ];
@@ -146,14 +170,18 @@ const todayTotalMilk = async (req, res) => {
     const todayMilkUsageAgreegation = await MilkUsage.aggregate(pipelineForUsage);
 
     let todayMilkUsage = 0;
+    let morningMilkUsage = 0;
+    let eveningMilkUsage = 0;
 
     if (todayMilkUsageAgreegation.length === 0) {
       todayMilkUsage = 0;
     } else {
       todayMilkUsage = todayMilkUsageAgreegation[0].totalLiter;
+      morningMilkUsage = todayMilkUsageAgreegation[0].morningMilkUsage;
+      eveningMilkUsage = todayMilkUsageAgreegation[0].eveningMilkUsage;
     }
 
-    return res.success({ data: { todaysMilk, milkingCows, todayMilkUsage } });
+    return res.success({ data: { todaysMilk, milkingCows, todayMilkUsage, morningMilk, eveningMilk, morningMilkUsage, eveningMilkUsage } });
 
   } catch (error) {
     return res.internalServerError({ message: error.message });

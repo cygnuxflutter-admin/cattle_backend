@@ -21,6 +21,8 @@ const schema = new Schema(
 
     used_in: { type: String },
 
+    day_time: { type: String },
+
     gaushala_id: { type: String },
 
     distribution_person: { type: String },
