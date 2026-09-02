@@ -86,7 +86,7 @@ const todayTotalMilk = async (req, res) => {
       },
       {
         $group: {
-          _id: null,
+          _id: '$day_time',
           totalLiter: { $sum: '$liter' },
           uniqueCowTagIds: { $addToSet: '$cow_tag_id' },
         },
@@ -98,8 +98,7 @@ const todayTotalMilk = async (req, res) => {
       },
       {
         $project: {
-          _id: 0, // Exclude _id from the result
-          uniqueCowTagIds: 0, // Exclude the uniqueCowTagIds array
+          uniqueCowTagIds: 0,
         },
       },
     ];
@@ -108,13 +107,19 @@ const todayTotalMilk = async (req, res) => {
 
     let todaysMilk = 0;
     let milkingCows = 0;
+    let morningMilk = 0;
+    let eveningMilk = 0;
 
-    if (todayMilkAgreegation.length === 0) {
-      todaysMilk = 0;
-      milkingCows = 0;
-    } else {
-      todaysMilk = todayMilkAgreegation[0].totalLiter;
-      milkingCows = todayMilkAgreegation[0].countUniqueCowTagIds;
+    if (todayMilkAgreegation.length > 0) {
+      for (let i = 0; i < todayMilkAgreegation.length; i++) {
+        if (todayMilkAgreegation[i]._id === 'morning') {
+          morningMilk = todayMilkAgreegation[i].totalLiter;
+        } else if (todayMilkAgreegation[i]._id === 'evening') {
+          eveningMilk = todayMilkAgreegation[i].totalLiter;
+        }
+        todaysMilk += todayMilkAgreegation[i].totalLiter;
+        milkingCows += todayMilkAgreegation[i].countUniqueCowTagIds;
+      }
     }
 
     const pipelineForUsage = [
@@ -122,22 +127,11 @@ const todayTotalMilk = async (req, res) => {
         $match: {
           gaushala_id: query.gaushala_id,
           date: todayDate,
-          // $expr: {
-          //   $eq: [
-          //     {
-          //       $dateToString: {
-          //         format: '%Y-%m-%d',
-          //         date: '$createdAt',
-          //       },
-          //     },
-          //     todayDate,
-          //   ],
-          // },
         },
       },
       {
         $group: {
-          _id: todayDate,
+          _id: '$day_time',
           totalLiter: { $sum: { $toDouble: '$liter' } },
         },
       },
@@ -146,14 +140,21 @@ const todayTotalMilk = async (req, res) => {
     const todayMilkUsageAgreegation = await MilkUsage.aggregate(pipelineForUsage);
 
     let todayMilkUsage = 0;
+    let morningMilkUsage = 0;
+    let eveningMilkUsage = 0;
 
-    if (todayMilkUsageAgreegation.length === 0) {
-      todayMilkUsage = 0;
-    } else {
-      todayMilkUsage = todayMilkUsageAgreegation[0].totalLiter;
+    if (todayMilkUsageAgreegation.length > 0) {
+      for (let i = 0; i < todayMilkUsageAgreegation.length; i++) {
+        if (todayMilkUsageAgreegation[i]._id === 'morning') {
+          morningMilkUsage = todayMilkUsageAgreegation[i].totalLiter;
+        } else if (todayMilkUsageAgreegation[i]._id === 'evening') {
+          eveningMilkUsage = todayMilkUsageAgreegation[i].totalLiter;
+        }
+        todayMilkUsage += todayMilkUsageAgreegation[i].totalLiter;
+      }
     }
 
-    return res.success({ data: { todaysMilk, milkingCows, todayMilkUsage } });
+    return res.success({ data: { todaysMilk, milkingCows, todayMilkUsage, morningMilk, eveningMilk, morningMilkUsage, eveningMilkUsage } });
 
   } catch (error) {
     return res.internalServerError({ message: error.message });

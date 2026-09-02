@@ -27,6 +27,8 @@ const schema = new Schema(
 
     date: { type: String },
 
+    day_time: { type: String, enum: ['morning', 'evening'] },
+
     description: { type: String },
 
     isDeleted: { type: Boolean },

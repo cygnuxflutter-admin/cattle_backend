@@ -86,6 +86,10 @@ const findAllMilk_usage = async (req, res) => {
         $lte: endDate,
       };
     }
+    
+    if (req.body.day_time) {
+      query.day_time = req.body.day_time;
+    }
 
     let foundMilk_usages = await dbService.findAll(Milk_usage, query, options);
     if (!foundMilk_usages || !foundMilk_usages.length) {
